@@ -1,11 +1,11 @@
-class HTMElement(object):
+class htmElement(object):
 
 	def __init__(self, tagname, **kwargs):
 		self.tagname = tagname
 		self.attributes = kwargs.get('attributes', [])
 		self.content = kwargs.get('content', [])
-		self.prebreak = kwargs.get("prebreak", False)
-		self.postbreak = kwargs.get("postbreak", False)
+		self.prebreak = kwargs.get("prebreak", 0)
+		self.postbreak = kwargs.get("postbreak", 0)
 
 	def add_attribute(self, attribute):
 		self.attributes.append(attribute)
@@ -21,30 +21,32 @@ class HTMElement(object):
 		markup += ">\n"
 		if self.content:
 			for element in self.content:
-				if isinstance(element, HTMElement): markup += element.construct(indent=indent+1)
-				else: markup += "\t" * (indent+1) + element
-		markup += "\t" * indent + "</" + self.tagname + ">\n"
-		if self.prebreak: markup = HTMBreak.construct(HTMBreak()) + markup
-		if self.postbreak: markup += HTMBreak.construct(HTMBreak())
+				if isinstance(element, htmElement): markup += element.construct(indent=indent+1)
+				else: markup += "\t" * (indent+1) + element + "\n"
+		endtag = "</" + self.tagname + ">"
+		if self.prebreak: markup = Break.construct(Break()) * self.prebreak + markup
+		if self.postbreak: endtag += Break.construct(Break()) * self.postbreak
+		endtag = "\t" * indent + endtag + '\n'
+		markup += endtag
 		return markup
 
-class HTMPage(HTMElement):
+class Page(htmElement):
 	def __init__(self, **kwargs):
 		self.tagname = "html"
-		HTMElement.__init__(self, self.tagname)
+		htmElement.__init__(self, self.tagname)
 		self.preamble = kwargs.get('preamble', 'Content-type: text/html\n\n<!doctype html>\n')
-		self.head = kwargs.get('head', HTMElement("head"))
-		self.body = kwargs.get('body', HTMElement("body"))
+		self.head = kwargs.get('head', htmElement("head"))
+		self.body = kwargs.get('body', htmElement("body"))
 		
 	def construct(self):
 		markup = self.preamble
 		self.add_content(self.head)
 		self.add_content(self.body)
-		markup += HTMElement.construct(self)
+		markup += htmElement.construct(self)
 		return markup
 		
 
-class HTMAttribute(object):
+class Attribute(object):
 	def __init__(self, name, value):
 		self.name = name
 		self.value = value
@@ -53,129 +55,138 @@ class HTMAttribute(object):
 		return " " + self.name + '="' + str(self.value) + '"'
 
 
-class HTMEnclosed_element(HTMElement):
+class Enclosed_element(htmElement):
 	def __init__(self, tagname, **kwargs):
 		self.tagname = tagname
-		HTMElement.__init__(self, self.tagname, **kwargs)
+		htmElement.__init__(self, self.tagname, **kwargs)
 
 	def construct(self, indent=0):
-		markup = "\t" * indent + "<" +  self.tagname
+		markup = "<" +  self.tagname
 		if self.attributes:
 			for attribute in self.attributes:
 				markup += attribute.construct()
-		markup += ">\n"
-		if self.prebreak: markup = HTMBreak.construct(HTMBreak()) + markup
-		if self.postbreak: markup += HTMBreak.construct(HTMBreak())
+		markup += ">"
+		if self.prebreak: markup = Break.construct(Break()) * self.prebreak + markup
+		if self.postbreak: markup += Break.construct(Break()) * self.postbreak
+		markup = "\t" * indent + markup + '\n'
 		return markup
 
 
-class HTMEmpty_element(HTMElement):
+class Empty_element(htmElement):
 
 	def __init__(self, tagname):
 		self.tagname = tagname
 
 	def construct(self, indent=0):
-		return "\t" * indent + "<" + self.tagname + ">\n"
+		return "\t" * indent + "<" + self.tagname + ">"
 
 
-class HTMBreak(HTMEmpty_element):
+class Break(Empty_element):
 
 	def __init__(self):
 		self.tagname = "br"
 
-class HTMA(HTMElement):
+class A(htmElement):
 
 	def __init__(self, href, **kwargs):
 		self.tagname = "a"
-		HTMElement.__init__(self, self.tagname, **kwargs)
-		self.href = HTMAttribute("href", href)
+		htmElement.__init__(self, self.tagname, **kwargs)
+		self.href = Attribute("href", href)
 		self.attributes.insert(0, self.href)
 		self.content = [kwargs.get('text', None)]
 
-class HTMStylesheet(HTMEnclosed_element):
+	def construct(self, indent=0):
+		markup = "\t" * indent + "<" +  self.tagname 
+		for attribute in self.attributes:
+			markup += attribute.construct()
+		markup += ">"
+		if self.content: markup += self.content[0]
+		return markup + "</" + self.tagname + ">\n"
+
+class Stylesheet(Enclosed_element):
 
 	def __init__(self, href):
 		self.tagname = "link"
-		HTMEnclosed_element.__init__(self, self.tagname)
-		self.href = HTMAttribute("href", href)
-		self.rel = HTMAttribute("rel", "stylesheet")
+		Enclosed_element.__init__(self, self.tagname)
+		self.href = Attribute("href", href)
+		self.rel = Attribute("rel", "stylesheet")
 		self.attributes = [self.rel, self.href]
 
-class HTMIcon(HTMEnclosed_element):
+class Icon(Enclosed_element):
 
 	def __init__(self, href):
 		self.tagname = "link"
-		HTMEnclosed_element.__init__(self, self.tagname)
-		self.href = HTMAttribute("href", href)
-		self.rel = HTMAttribute("rel", "shortcut icon")
+		Enclosed_element.__init__(self, self.tagname)
+		self.href = Attribute("href", href)
+		self.rel = Attribute("rel", "shortcut icon")
 		self.attributes = [self.rel, self.href]
 
-class HTMTitle(HTMElement):
+class Title(htmElement):
 
 	def __init__(self, title):
 		self.tagname = "title"
-		HTMElement.__init__(self, self.tagname)
-		self.content = [title + '\n']
+		htmElement.__init__(self, self.tagname)
+		self.content = [title]
 
-class HTMBody(HTMElement):
+class Body(htmElement):
 
 	def __init__(self, **kwargs):
 		self.tagname = "body"
-		HTMElement.__init__(self, self.tagname, **kwargs)
+		htmElement.__init__(self, self.tagname, **kwargs)
 
-class HTMDiv(HTMElement):
+class Div(htmElement):
 
 	def __init__(self, id, **kwargs):
 		self.tagname = "div"
-		HTMElement.__init__(self, self.tagname, **kwargs)
-		self.id = HTMAttribute("id", id)
+		htmElement.__init__(self, self.tagname, **kwargs)
+		self.id = Attribute("id", id)
 		self.attributes.insert(0, self.id)
 
-class HTMInput(HTMEnclosed_element):
+class Input(Enclosed_element):
 
 	def __init__(self, name, type, **kwargs):
 		self.tagname = "input"
-		HTMEnclosed_element.__init__(self, self.tagname, **kwargs)
-		self.name = HTMAttribute("name", name)
-		self.type = HTMAttribute("type", type)
+		Enclosed_element.__init__(self, self.tagname, **kwargs)
+		self.name = Attribute("name", name)
+		self.type = Attribute("type", type)
 		self.value = kwargs.get("value", None)
 		self.size = kwargs.get("size", None)
 		self.attributes = [self.type, self.name]
-		if self.value: self.attributes.append(HTMAttribute("value", self.value))
-		if self.size: self.attributes.append(HTMAttribute("size", self.size))
+		if self.value: self.attributes.append(Attribute("value", self.value))
+		if self.size: self.attributes.append(Attribute("size", self.size))
 
-class HTMSubmitbutton(HTMEnclosed_element):
+class Submitbutton(Enclosed_element):
 	
 	def __init__(self):
 		self.tagname = "input"
-		HTMEnclosed_element.__init__(self, self.tagname)
-		self.attributes = [HTMAttribute("type", "submit"), HTMAttribute("value", "Submit")]
+		Enclosed_element.__init__(self, self.tagname)
+		self.attributes = [Attribute("type", "submit"), Attribute("value", "Submit")]
 
-class HTMResetbutton(HTMEnclosed_element):
+class Resetbutton(Enclosed_element):
 	
 	def __init__(self):
 		self.tagname = "input"
-		HTMEnclosed_element.__init__(self, self.tagname)
-		self.attributes = [HTMAttribute("type", "reset"), HTMAttribute("value", "Reset")]
+		Enclosed_element.__init__(self, self.tagname)
+		self.attributes = [Attribute("type", "reset"), Attribute("value", "Reset")]
 
-class HTMForm(HTMElement):
+class Form(htmElement):
 
 	def __init__(self, method, action, **kwargs):
 		self.tagname = "form"
-		HTMElement.__init__(self, self.tagname, **kwargs)
-		self.method = HTMAttribute("method", method)
-		self.action = HTMAttribute("action", action)
+		htmElement.__init__(self, self.tagname, **kwargs)
+		self.method = Attribute("method", method)
+		self.action = Attribute("action", action)
 		self.attributes.insert(0, self.action)
 		self.attributes.insert(0, self.method)
 
-class HTMTextarea(HTMElement):
+class Textarea(htmElement):
 
 	def __init__(self, name, rows, cols, **kwargs):
 		self.tagname = "textarea"
-		HTMElement.__init__(self, self.tagname, **kwargs)
-		self.name = HTMAttribute("name", name)
-		self.rows = HTMAttribute("rows", rows)
-		self.cols = HTMAttribute("cols", cols)
+		htmElement.__init__(self, self.tagname, **kwargs)
+		self.name = Attribute("name", name)
+		self.rows = Attribute("rows", rows)
+		self.cols = Attribute("cols", cols)
 		self.attributes.insert(0, self.cols)
 		self.attributes.insert(0, self.rows)
 		self.attributes.insert(0, self.name)
