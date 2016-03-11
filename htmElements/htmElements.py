@@ -1,5 +1,4 @@
 class htmElement(object):
-
 	def __init__(self, tagname, **kwargs):
 		self.tagname = tagname
 		self.attributes = kwargs.get('attributes', [])
@@ -30,6 +29,7 @@ class htmElement(object):
 		markup += endtag
 		return markup
 
+
 class Page(htmElement):
 	def __init__(self, **kwargs):
 		self.tagname = "html"
@@ -52,7 +52,7 @@ class Attribute(object):
 		self.value = value
 
 	def construct(self):
-		return " " + self.name + '="' + str(self.value) + '"'
+		return " " + self.name + '=' + str(self.value)
 
 
 class Enclosed_element(htmElement):
@@ -73,7 +73,6 @@ class Enclosed_element(htmElement):
 
 
 class Empty_element(htmElement):
-
 	def __init__(self, tagname):
 		self.tagname = tagname
 
@@ -82,12 +81,11 @@ class Empty_element(htmElement):
 
 
 class Break(Empty_element):
-
 	def __init__(self):
 		self.tagname = "br"
 
-class A(htmElement):
 
+class A(htmElement):
 	def __init__(self, href, **kwargs):
 		self.tagname = "a"
 		htmElement.__init__(self, self.tagname, **kwargs)
@@ -101,10 +99,13 @@ class A(htmElement):
 			markup += attribute.construct()
 		markup += ">"
 		if self.content: markup += self.content[0]
-		return markup + "</" + self.tagname + ">\n"
+		markup += "</" + self.tagname + ">"
+		if self.prebreak: markup = Break.construct(Break()) * self.prebreak + markup
+		if self.postbreak: markup += Break.construct(Break()) * self.postbreak
+		return markup + '\n'
+
 
 class Stylesheet(Enclosed_element):
-
 	def __init__(self, href):
 		self.tagname = "link"
 		Enclosed_element.__init__(self, self.tagname)
@@ -112,8 +113,8 @@ class Stylesheet(Enclosed_element):
 		self.rel = Attribute("rel", "stylesheet")
 		self.attributes = [self.rel, self.href]
 
-class Icon(Enclosed_element):
 
+class Icon(Enclosed_element):
 	def __init__(self, href):
 		self.tagname = "link"
 		Enclosed_element.__init__(self, self.tagname)
@@ -121,29 +122,29 @@ class Icon(Enclosed_element):
 		self.rel = Attribute("rel", "shortcut icon")
 		self.attributes = [self.rel, self.href]
 
-class Title(htmElement):
 
+class Title(htmElement):
 	def __init__(self, title):
 		self.tagname = "title"
 		htmElement.__init__(self, self.tagname)
 		self.content = [title]
 
-class Body(htmElement):
 
+class Body(htmElement):
 	def __init__(self, **kwargs):
 		self.tagname = "body"
 		htmElement.__init__(self, self.tagname, **kwargs)
 
-class Div(htmElement):
 
+class Div(htmElement):
 	def __init__(self, id, **kwargs):
 		self.tagname = "div"
 		htmElement.__init__(self, self.tagname, **kwargs)
 		self.id = Attribute("id", id)
 		self.attributes.insert(0, self.id)
 
-class Input(Enclosed_element):
 
+class Input(Enclosed_element):
 	def __init__(self, name, type, **kwargs):
 		self.tagname = "input"
 		Enclosed_element.__init__(self, self.tagname, **kwargs)
@@ -155,22 +156,22 @@ class Input(Enclosed_element):
 		if self.value: self.attributes.append(Attribute("value", self.value))
 		if self.size: self.attributes.append(Attribute("size", self.size))
 
+
 class Submitbutton(Enclosed_element):
-	
 	def __init__(self):
 		self.tagname = "input"
 		Enclosed_element.__init__(self, self.tagname)
 		self.attributes = [Attribute("type", "submit"), Attribute("value", "Submit")]
 
+
 class Resetbutton(Enclosed_element):
-	
 	def __init__(self):
 		self.tagname = "input"
 		Enclosed_element.__init__(self, self.tagname)
 		self.attributes = [Attribute("type", "reset"), Attribute("value", "Reset")]
 
-class Form(htmElement):
 
+class Form(htmElement):
 	def __init__(self, method, action, **kwargs):
 		self.tagname = "form"
 		htmElement.__init__(self, self.tagname, **kwargs)
@@ -179,14 +180,25 @@ class Form(htmElement):
 		self.attributes.insert(0, self.action)
 		self.attributes.insert(0, self.method)
 
-class Textarea(htmElement):
 
+class Textarea(htmElement):
 	def __init__(self, name, rows, cols, **kwargs):
 		self.tagname = "textarea"
 		htmElement.__init__(self, self.tagname, **kwargs)
 		self.name = Attribute("name", name)
 		self.rows = Attribute("rows", rows)
 		self.cols = Attribute("cols", cols)
+		self.attributes.insert(0, self.name)
 		self.attributes.insert(0, self.cols)
 		self.attributes.insert(0, self.rows)
-		self.attributes.insert(0, self.name)
+
+	def construct(self, indent=0):
+		markup = "\t" * indent + "<" +  self.tagname 
+		for attribute in self.attributes:
+			markup += attribute.construct()
+		markup += ">"
+		if self.content: markup += self.content[0]
+		markup += "</" + self.tagname + ">"
+		if self.prebreak: markup = Break.construct(Break()) * self.prebreak + markup
+		if self.postbreak: markup += Break.construct(Break()) * self.postbreak
+		return markup + '\n'
