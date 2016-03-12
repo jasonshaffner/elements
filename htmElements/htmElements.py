@@ -55,7 +55,7 @@ class Attribute(object):
 		return " " + self.name + '=' + str(self.value)
 
 
-class Enclosed_element(htmElement):
+class EnclosedElement(htmElement):
 	def __init__(self, tagname, **kwargs):
 		self.tagname = tagname
 		htmElement.__init__(self, self.tagname, **kwargs)
@@ -72,7 +72,7 @@ class Enclosed_element(htmElement):
 		return markup
 
 
-class Empty_element(htmElement):
+class EmptyElement(htmElement):
 	def __init__(self, tagname):
 		self.tagname = tagname
 
@@ -80,7 +80,7 @@ class Empty_element(htmElement):
 		return "\t" * indent + "<" + self.tagname + ">"
 
 
-class Break(Empty_element):
+class Break(EmptyElement):
 	def __init__(self):
 		self.tagname = "br"
 
@@ -105,19 +105,19 @@ class A(htmElement):
 		return markup + '\n'
 
 
-class Stylesheet(Enclosed_element):
+class Stylesheet(EnclosedElement):
 	def __init__(self, href):
 		self.tagname = "link"
-		Enclosed_element.__init__(self, self.tagname)
+		EnclosedElement.__init__(self, self.tagname)
 		self.href = Attribute("href", href)
 		self.rel = Attribute("rel", "stylesheet")
 		self.attributes = [self.rel, self.href]
 
 
-class Icon(Enclosed_element):
+class Icon(EnclosedElement):
 	def __init__(self, href):
 		self.tagname = "link"
-		Enclosed_element.__init__(self, self.tagname)
+		EnclosedElement.__init__(self, self.tagname)
 		self.href = Attribute("href", href)
 		self.rel = Attribute("rel", "shortcut icon")
 		self.attributes = [self.rel, self.href]
@@ -144,30 +144,34 @@ class Div(htmElement):
 		self.attributes.insert(0, self.id)
 
 
-class Input(Enclosed_element):
+class Input(EnclosedElement):
 	def __init__(self, name, type, **kwargs):
 		self.tagname = "input"
-		Enclosed_element.__init__(self, self.tagname, **kwargs)
-		self.name = Attribute("name", name)
-		self.type = Attribute("type", type)
+		EnclosedElement.__init__(self, self.tagname, **kwargs)
+		self.attributes.insert(0, Attribute("name", name))
+		self.attributes.insert(0, Attribute("type", type))
 		self.value = kwargs.get("value", None)
 		self.size = kwargs.get("size", None)
-		self.attributes = [self.type, self.name]
 		if self.value: self.attributes.append(Attribute("value", self.value))
 		if self.size: self.attributes.append(Attribute("size", self.size))
 
+class TextBox(Input):
+	def __init__(self, name, **kwargs):
+		Input.__init__(self, name, "text", **kwargs)
+		self.placeholder = kwargs.get('placeholder', None)
+		if self.placeholder: self.attributes.append(Attribute("placeholder", self.placeholder))
 
-class Submitbutton(Enclosed_element):
+class SubmitButton(EnclosedElement):
 	def __init__(self):
 		self.tagname = "input"
-		Enclosed_element.__init__(self, self.tagname)
+		EnclosedElement.__init__(self, self.tagname)
 		self.attributes = [Attribute("type", "submit"), Attribute("value", "Submit")]
 
 
-class Resetbutton(Enclosed_element):
+class ResetButton(EnclosedElement):
 	def __init__(self):
 		self.tagname = "input"
-		Enclosed_element.__init__(self, self.tagname)
+		EnclosedElement.__init__(self, self.tagname)
 		self.attributes = [Attribute("type", "reset"), Attribute("value", "Reset")]
 
 
@@ -181,7 +185,7 @@ class Form(htmElement):
 		self.attributes.insert(0, self.method)
 
 
-class Textarea(htmElement):
+class TextArea(htmElement):
 	def __init__(self, name, rows, cols, **kwargs):
 		self.tagname = "textarea"
 		htmElement.__init__(self, self.tagname, **kwargs)
@@ -191,6 +195,8 @@ class Textarea(htmElement):
 		self.attributes.insert(0, self.name)
 		self.attributes.insert(0, self.cols)
 		self.attributes.insert(0, self.rows)
+		self.placeholder = kwargs.get('placeholder', None)
+		if self.placeholder: self.attributes.append(Attribute("placeholder", self.placeholder))
 
 	def construct(self, indent=0):
 		markup = "\t" * indent + "<" +  self.tagname 
@@ -202,3 +208,25 @@ class Textarea(htmElement):
 		if self.prebreak: markup = Break.construct(Break()) * self.prebreak + markup
 		if self.postbreak: markup += Break.construct(Break()) * self.postbreak
 		return markup + '\n'
+
+class Pre(htmElement):
+	def __init__(self, **kwargs):
+		self.tagname = "pre"
+		htmElement.__init__(self, self.tagname, **kwargs)
+
+	def construct(self, indent=0):
+		markup = "\t" * indent + "<" +  self.tagname 
+		if self.attributes:
+			for attribute in self.attributes:
+				markup += attribute.construct()
+		markup += ">\n"
+		if self.content:
+			for element in self.content:
+				if isinstance(element, htmElement): markup += element.construct(indent=indent+1)
+				else: markup += element + '\n'
+		endtag = "</" + self.tagname + ">"
+		if self.prebreak: markup = Break.construct(Break()) * self.prebreak + markup
+		if self.postbreak: endtag += Break.construct(Break()) * self.postbreak
+		endtag = "\t" * indent + endtag + '\n'
+		markup += endtag
+		return markup
