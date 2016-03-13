@@ -34,7 +34,7 @@ class Page(htmElement):
 	def __init__(self, **kwargs):
 		self.tagname = "html"
 		htmElement.__init__(self, self.tagname)
-		self.preamble = kwargs.get('preamble', 'Content-type: text/html\n\n<!doctype html>\n')
+		self.preamble = kwargs.get('preamble', 'Content-type: text/html; charset=utf-8\n\n<!doctype html>\n')
 		self.head = kwargs.get('head', htmElement("head"))
 		self.body = kwargs.get('body', htmElement("body"))
 		
