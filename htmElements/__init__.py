@@ -18,4 +18,6 @@ __all__ = ['htmElement',
 		'ResetButton',
 		'Form',
 		'TextArea',
-		'Pre']
+		'Pre',
+		'Style',
+		'cssAttribute']

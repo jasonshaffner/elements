@@ -186,16 +186,16 @@ class Form(htmElement):
 
 
 class TextArea(htmElement):
-	def __init__(self, name, rows, cols, **kwargs):
+	def __init__(self, name, **kwargs):
 		self.tagname = "textarea"
 		htmElement.__init__(self, self.tagname, **kwargs)
 		self.name = Attribute("name", name)
-		self.rows = Attribute("rows", rows)
-		self.cols = Attribute("cols", cols)
-		self.attributes.insert(0, self.name)
-		self.attributes.insert(0, self.cols)
-		self.attributes.insert(0, self.rows)
+		self.rows = kwargs.get("rows", None)
+		self.cols = kwargs.get("cols", None)
 		self.placeholder = kwargs.get('placeholder', None)
+		self.attributes.insert(0, self.name)
+		if self.rows: self.attributes.append(Attribute("rows", rows))
+		if self.cols: self.attributes.append(Attribute("cols", cols))
 		if self.placeholder: self.attributes.append(Attribute("placeholder", self.placeholder))
 
 	def construct(self, indent=0):
@@ -230,3 +230,21 @@ class Pre(htmElement):
 		endtag = "\t" * indent + endtag + '\n'
 		markup += endtag
 		return markup
+
+class cssAttribute(Attribute):
+	def construct(self):
+		return " " + self.name + ': ' + str(self.value) + ";"
+
+class Style(Attribute):
+	def __init__(self, value):
+		self.name = "style"
+		Attribute.__init__(self, self.name, value)
+
+	def construct(self):
+		if not isinstance(self.value, list):
+			return ' style="' + self.value.construct() + '"'
+		else:
+			markup = ' style="'
+			for attr in self.value:
+				markup += attr.construct()
+		return markup + '"'
