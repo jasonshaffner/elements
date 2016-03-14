@@ -194,8 +194,8 @@ class TextArea(htmElement):
 		self.cols = kwargs.get("cols", None)
 		self.placeholder = kwargs.get('placeholder', None)
 		self.attributes.insert(0, self.name)
-		if self.rows: self.attributes.append(Attribute("rows", rows))
-		if self.cols: self.attributes.append(Attribute("cols", cols))
+		if self.rows: self.attributes.append(Attribute("rows", self.rows))
+		if self.cols: self.attributes.append(Attribute("cols", self.cols))
 		if self.placeholder: self.attributes.append(Attribute("placeholder", self.placeholder))
 
 	def construct(self, indent=0):
