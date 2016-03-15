@@ -52,7 +52,7 @@ class Attribute(object):
 		self.value = value
 
 	def construct(self):
-		return " " + self.name + '=' + str(self.value)
+		return ' ' + self.name + '="' + str(self.value) + '"'
 
 
 class EnclosedElement(htmElement):
