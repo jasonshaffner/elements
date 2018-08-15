@@ -1,4 +1,4 @@
-from htmElements import *
+from elements import htmElements, graphqElements
 
 __all__ = ['htmElement',
 		'Page',
@@ -20,4 +20,9 @@ __all__ = ['htmElement',
 		'TextArea',
 		'Pre',
 		'Style',
-		'cssAttribute']
+		'cssAttribute',
+		'query',
+		'queryElement',
+		'node',
+		'condition',
+		]
