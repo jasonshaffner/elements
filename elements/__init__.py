@@ -1,4 +1,4 @@
-from elements import htmElements, graphqElements
+from . import htmElements, graphqElements
 
 __all__ = ['htmElement',
 		'Page',
