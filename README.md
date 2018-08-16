@@ -1,4 +1,8 @@
-htmElements
+elements
 ===========
 
-A small suite of tools designed to simplify writing small simple webpages
+Building blocks for language structuring.
+htmElements for building simple webpages.
+graphqElememts and postgresqElements for building queries.
+xmElements and yamElements for building markup docs.
+
