@@ -43,7 +43,6 @@ class queryElement(query):
 		if self.input: query += " " + self.input()
 		if self.argument: query += " " + self.argument()
 		if not self.elements: return query + "\n"
-		print(type(self.elements), type(self))
 		if isinstance(self.elements, type(self)):
 			query += " {\n" + ((indent + 1) * '\t') + self.elements.construct(indent + 1)
 		else:
