@@ -37,14 +37,14 @@ class Page(htmElement):
 		self.preamble = kwargs.get('preamble', 'Content-type: text/html; charset=utf-8\n\n<!doctype html>\n')
 		self.head = kwargs.get('head', htmElement("head"))
 		self.body = kwargs.get('body', htmElement("body"))
-		
+
 	def construct(self):
 		markup = self.preamble
 		self.add_content(self.head)
 		self.add_content(self.body)
 		markup += htmElement.construct(self)
 		return markup
-		
+
 
 class Attribute(object):
 	def __init__(self, name, value):
