@@ -1,7 +1,7 @@
 class query:
-	def __init__(self, elementName, operation='query', *elements):
+	def __init__(self, elementName, *elements, **kwargs):
 		self.elementName = elementName
-		self.operation = operation
+		self.operation = kwargs.get('operation', 'query')
 		if elements and not isinstance(elements, type(self)) and not isinstance(elements[0], type(self)):
 			self.elements = [e for element in elements for e in element]
 		else: self.elements = elements
