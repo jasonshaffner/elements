@@ -24,6 +24,8 @@ class htmElement(object):
         markup += ">\n"
         if isinstance(self.content, str):
             markup += "\t" * (indent+1) + self.content + "\n"
+        elif isinstance(self.content, htmElement):
+            markup += self.content.construct(indent=indent+1)
         else:
             for element in self.content:
                 if isinstance(element, htmElement):
@@ -45,8 +47,8 @@ class Page(htmElement):
         self.tagname = "html"
         htmElement.__init__(self, self.tagname)
         self.preamble = kwargs.get('preamble', 'Content-type: text/html; charset=utf-8\n\n<!doctype html>\n')
-        self.head = kwargs.get('head', htmElement("head"))
-        self.body = kwargs.get('body', htmElement("body"))
+        self.head = kwargs.get('head', Head())
+        self.body = kwargs.get('body', Body())
 
     def construct(self):
         markup = self.preamble
@@ -145,6 +147,11 @@ class Body(htmElement):
         self.tagname = "body"
         htmElement.__init__(self, self.tagname, **kwargs)
 
+class Head(htmElement):
+    def __init__(self, **kwargs):
+        self.tagname = "head"
+        htmElement.__init__(self, self.tagname, **kwargs)
+
 
 class Div(htmElement):
     def __init__(self, id, **kwargs):
@@ -162,8 +169,10 @@ class Input(EnclosedElement):
         self.attributes.insert(0, Attribute("type", type))
         self.value = kwargs.get("value", None)
         self.size = kwargs.get("size", None)
-        if self.value: self.attributes.append(Attribute("value", self.value))
-        if self.size: self.attributes.append(Attribute("size", self.size))
+        if self.value:
+            self.attributes.append(Attribute("value", self.value))
+        if self.size:
+            self.attributes.append(Attribute("size", self.size))
 
 class TextBox(Input):
     def __init__(self, name, **kwargs):
@@ -204,9 +213,12 @@ class TextArea(htmElement):
         self.cols = kwargs.get("cols", None)
         self.placeholder = kwargs.get('placeholder', None)
         self.attributes.insert(0, self.name)
-        if self.rows: self.attributes.append(Attribute("rows", self.rows))
-        if self.cols: self.attributes.append(Attribute("cols", self.cols))
-        if self.placeholder: self.attributes.append(Attribute("placeholder", self.placeholder))
+        if self.rows:
+            self.attributes.append(Attribute("rows", self.rows))
+        if self.cols:
+            self.attributes.append(Attribute("cols", self.cols))
+        if self.placeholder:
+            self.attributes.append(Attribute("placeholder", self.placeholder))
 
     def construct(self, indent=0):
         markup = "\t" * indent + "<" +  self.tagname 
@@ -215,8 +227,10 @@ class TextArea(htmElement):
         markup += ">"
         if self.content: markup += self.content[0]
         markup += "</" + self.tagname + ">"
-        if self.prebreak: markup = Break.construct(Break()) * self.prebreak + markup
-        if self.postbreak: markup += Break.construct(Break()) * self.postbreak
+        if self.prebreak:
+            markup = Break.construct(Break()) * self.prebreak + markup
+        if self.postbreak:
+            markup += Break.construct(Break()) * self.postbreak
         return markup + '\n'
 
 class Pre(htmElement):
@@ -232,11 +246,15 @@ class Pre(htmElement):
         markup += ">\n"
         if self.content:
             for element in self.content:
-                if isinstance(element, htmElement): markup += element.construct(indent=indent+1)
-                else: markup += element + '\n'
+                if isinstance(element, htmElement):
+                    markup += element.construct(indent=indent+1)
+                else:
+                    markup += element + '\n'
         endtag = "</" + self.tagname + ">"
-        if self.prebreak: markup = Break.construct(Break()) * self.prebreak + markup
-        if self.postbreak: endtag += Break.construct(Break()) * self.postbreak
+        if self.prebreak:
+            markup = Break.construct(Break()) * self.prebreak + markup
+        if self.postbreak:
+            endtag += Break.construct(Break()) * self.postbreak
         endtag = "\t" * indent + endtag + '\n'
         markup += endtag
         return markup
