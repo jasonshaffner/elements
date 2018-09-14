@@ -10,21 +10,31 @@ class htmElement(object):
         self.attributes.append(attribute)
 
     def add_content(self, content):
-        self.content.append(content)
+        if isinstance(content, (htmElement, str)):
+            self.content.append(content)
+        elif content:
+            for c in content:
+                self.add_content(c)
 
     def construct(self, indent=0):
-        markup = "\t" * indent + "<" +  self.tagname 
+        markup = "\t" * indent + "<" +  self.tagname
         if self.attributes:
             for attribute in self.attributes:
                 markup += attribute.construct()
         markup += ">\n"
-        if self.content:
+        if isinstance(self.content, str):
+            markup += "\t" * (indent+1) + self.content + "\n"
+        else:
             for element in self.content:
-                if isinstance(element, htmElement): markup += element.construct(indent=indent+1)
-                else: markup += "\t" * (indent+1) + element + "\n"
+                if isinstance(element, htmElement):
+                    markup += element.construct(indent=indent+1)
+                else:
+                    markup += "\t" * (indent+1) + element + "\n"
         endtag = "</" + self.tagname + ">"
-        if self.prebreak: markup = Break.construct(Break()) * self.prebreak + markup
-        if self.postbreak: endtag += Break.construct(Break()) * self.postbreak
+        if self.prebreak:
+            markup = Break.construct(Break()) * self.prebreak + markup
+        if self.postbreak:
+            endtag += Break.construct(Break()) * self.postbreak
         endtag = "\t" * indent + endtag + '\n'
         markup += endtag
         return markup
@@ -94,7 +104,7 @@ class A(htmElement):
         self.content = [kwargs.get('text', None)]
 
     def construct(self, indent=0):
-        markup = "\t" * indent + "<" +  self.tagname 
+        markup = "\t" * indent + "<" +  self.tagname
         for attribute in self.attributes:
             markup += attribute.construct()
         markup += ">"
@@ -248,3 +258,23 @@ class Style(Attribute):
             for attr in self.value:
                 markup += attr.construct()
         return markup + '"'
+
+class Table(htmElement):
+    def __init__(self, **kwargs):
+        self.tagname = 'table'
+        htmElement.__init__(self, self.tagname, **kwargs)
+
+class TableRow(htmElement):
+    def __init__(self, **kwargs):
+        self.tagname = 'tr'
+        htmElement.__init__(self, self.tagname, **kwargs)
+
+class TableHeader(htmElement):
+    def __init__(self, **kwargs):
+        self.tagname = 'th'
+        htmElement.__init__(self, self.tagname, **kwargs)
+
+class TableData(htmElement):
+    def __init__(self, **kwargs):
+        self.tagname = 'td'
+        htmElement.__init__(self, self.tagname, **kwargs)
