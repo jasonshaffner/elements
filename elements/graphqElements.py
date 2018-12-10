@@ -48,7 +48,7 @@ class queryElement(query):
         else:
             query += " {\n"
             for element in self.elements:
-                query += ((indent + 1) * '\t') + element.construct(indent + 1)
+                query += ((indent + 1) * '\t') + element.construct(indent + 1) + '\n'
         query += '\n' + (indent * '\t') + '}\n'
         return query
 
@@ -90,4 +90,4 @@ class input(queryElement):
 
     def construct(self, indent=0):
         if not self.elements: return
-        return '(' + super().construct(indent=0) + (indent * '\t') + ')'
+        return '(' + super().construct(indent=indent + 1) + ((indent + 1) * '\t') + ')'
