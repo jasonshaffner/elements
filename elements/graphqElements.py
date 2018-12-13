@@ -65,15 +65,25 @@ class var(queryElement):
 
     def construct(self, *args):
         if isinstance(self.var_value, int): return self.var_name + ": " + str(self.var_value)
-        return self.var_name + ': "' + self.var_value + '"'
+        elif isinstance(self.var_value, str):
+            return self.var_name + ': "' + self.var_value + '"'
+        elif isinstance(self.var_value, type(self)):
+            return self.var_name + ': {'  + self.var_value.construct() + '}\n'
+        elif isinstance(self.var_value, list):
+            return self.var_name + ': {' + ", ".join(val.construct() for val in self.var_value) + '}\n'
 
 
 class argument(queryElement):
-    def __init__(self, var_name, var_value):
-        self.var = var(var_name, var_value)
+    def __init__(self, *args):
+       self.vars = args
 
     def construct(self, *args):
-        return '(' + self.var() + ' )'
+        if isinstance(self.vars, var):
+            return '(' + self.var() + ' )'
+        elif isinstance(self.vars[0], var):
+            return "".join(('(', ", ".join([var() for var in self.vars]), ')'))
+        elif len(self.vars) == 2 and isinstance(self.vars[0], str) and isinstance(self.vars[1], (str,int)):
+            return '(' + var(self.vars[0], self.vars[1])() + ')'
 
 
 class condition(queryElement):
@@ -81,7 +91,7 @@ class condition(queryElement):
         self.var = var(var_name, var_value)
 
     def construct(self, *args):
-        return '(condition: { ' + self.var() + '" })'
+        return '(condition: { ' + self.var() + ' })'
 
 
 class input(queryElement):
@@ -89,5 +99,6 @@ class input(queryElement):
         super().__init__('input:', variables)
 
     def construct(self, indent=0):
-        if not self.elements: return
+        if not self.elements:
+            return
         return '(' + super().construct(indent=indent + 1) + ((indent + 1) * '\t') + ')'
