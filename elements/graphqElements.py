@@ -39,16 +39,21 @@ class queryElement(query):
 
     def construct(self, indent=0):
         query = self.elementName
-        if self.condition: query += " " + self.condition()
-        if self.input: query += " " + self.input()
-        if self.argument: query += " " + self.argument()
-        if not self.elements: return query + "\n"
+        if self.condition:
+            query += " " + self.condition()
+        if self.input:
+            query += " " + self.input()
+        if self.argument:
+            query += " " + self.argument()
+        if not self.elements:
+            return query + "\n"
         if isinstance(self.elements, type(self)):
             query += " {\n" + ((indent + 1) * '\t') + self.elements.construct(indent + 1)
         else:
             query += " {\n"
             for element in self.elements:
-                query += ((indent + 1) * '\t') + element.construct(indent + 1) + '\n'
+                if element:
+                    query += ((indent + 1) * '\t') + element.construct(indent + 1) + '\n'
         query += '\n' + (indent * '\t') + '}\n'
         return query
 
@@ -64,7 +69,8 @@ class var(queryElement):
         self.var_value = var_value
 
     def construct(self, *args):
-        if isinstance(self.var_value, int): return self.var_name + ": " + str(self.var_value)
+        if isinstance(self.var_value, int):
+            return self.var_name + ": " + str(self.var_value)
         elif isinstance(self.var_value, str):
             return self.var_name + ': "' + self.var_value + '"'
         elif isinstance(self.var_value, type(self)):
