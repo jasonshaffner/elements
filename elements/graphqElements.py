@@ -33,6 +33,7 @@ class queryElement(query):
         self.condition = kwargs.get('condition', None)
         self.input = kwargs.get('input', None)
         self.argument = kwargs.get('argument', None)
+        self.filter = kwargs.get('filter', None)
 
     def __call__(self, indent=0):
         return self.construct(indent)
@@ -45,6 +46,8 @@ class queryElement(query):
             query += " " + self.input()
         if self.argument:
             query += " " + self.argument()
+        if self.filter:
+            query += " " + self.filter()
         if not self.elements:
             return query + "\n"
         if isinstance(self.elements, type(self)):
@@ -99,6 +102,17 @@ class condition(queryElement):
     def construct(self, *args):
         return '(condition: { ' + self.var() + ' })'
 
+class filter(queryElement):
+    def __init__(self, *args):
+        self.vars = args
+
+    def construct(self, *args):
+        if isinstance(self.vars, var):
+            return "".join(('(filter: { ', self.vars(), ' })'))
+        elif isinstance(self.vars[0], var):
+            return "".join(('(filter: { ', ", ".join([arg() for arg in self.vars]), ' })'))
+        elif len(args) == 2 and isinstance(self.vars[0], str) and isinstance(self.vars[1], (str,int)):
+            return "".join(('(filter: { ', var(self.vars[0], self.vars[1])(), ' })'))
 
 class input(queryElement):
     def __init__(self, *variables):
