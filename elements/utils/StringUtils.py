@@ -1,3 +1,5 @@
+import re
+
 def generate_camel_case(words):
     assert isinstance(words, str)
     if not " " in words:
