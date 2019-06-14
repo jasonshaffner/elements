@@ -55,7 +55,7 @@ class queryElement(query):
         else:
             query += " {\n"
             for element in self.elements:
-                if element:
+                if element or isinstance(element, int):
                     query += ((indent + 1) * '\t') + element.construct(indent + 1) + '\n'
         query += '\n' + (indent * '\t') + '}\n'
         return query
