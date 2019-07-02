@@ -23,11 +23,12 @@ def queryTableWithColumnFilter(table, columns, column, identifier, filter_type='
     camelCase = StringUtils.generate_camel_case(table)
     FirstCaps = StringUtils.pluralize("".join((camelCase[0].upper(), camelCase[1:])))
     if isinstance(column, dict):
-        column_name = next(c for c in column.keys())
-        columnCamelCase = StringUtils.generate_camel_case(column_name)
-        val = graphqElements.var(filter_type, identifier)
-        subfilter = graphqElements.var(column.get(column_name), val)
-        fltr = graphqElements.filter(graphqElements.var(f'{columnCamelCase}', subfilter))
+        subfilters = []
+        for i, c in enumerate(column.keys()):
+            columnCamelCase = StringUtils.generate_camel_case(c)
+            val = graphqElements.var(column[c], identifier[columnCamelCase])
+            subfilters.append(graphqElements.var(columnCamelCase, val))
+        fltr = graphqElements.filter(*subfilters)
     else:
         columnCamelCase = StringUtils.generate_camel_case(column)
         fltr = graphqElements.filter(graphqElements.var(f'{columnCamelCase}', graphqElements.var(filter_type, identifier)))
