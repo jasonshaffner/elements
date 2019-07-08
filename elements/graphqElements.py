@@ -73,8 +73,8 @@ class var(queryElement):
 
     def construct(self, *args):
         if isinstance(self.var_value, bool):
-            self.var_value = 'true' if self.var_value else 'false'
-            return self.var_name + ": " + self.var_value
+            var_value = 'true' if self.var_value else 'false'
+            return self.var_name + ": " + var_value
         if isinstance(self.var_value, int):
             return self.var_name + ": " + str(self.var_value)
         elif isinstance(self.var_value, str):
