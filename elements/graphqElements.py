@@ -78,6 +78,8 @@ class var(queryElement):
         if isinstance(self.var_value, int):
             return self.var_name + ": " + str(self.var_value)
         elif isinstance(self.var_value, str):
+            if self.var_value == "null":
+                return self.var_name + ': ' + self.var_value
             return self.var_name + ': "' + self.var_value + '"'
         elif isinstance(self.var_value, type(self)):
             return self.var_name + ': {'  + self.var_value.construct() + '}\n'
