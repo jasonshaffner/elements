@@ -34,6 +34,7 @@ class queryElement(query):
         self.input = kwargs.get('input', None)
         self.argument = kwargs.get('argument', None)
         self.filter = kwargs.get('filter', None)
+        self.where = kwargs.get('where', None)
 
     def __call__(self, indent=0):
         return self.construct(indent)
@@ -43,7 +44,10 @@ class queryElement(query):
         if self.condition:
             query += " " + self.condition()
         if self.input:
-            query += " " + self.input()
+            if self.where:
+                query += " " + self.input().rstrip(')') + self.where().lstrip('(')
+            else:
+                query += " " + self.input()
         if self.argument:
             query += " " + self.argument()
         if self.filter:
@@ -122,6 +126,15 @@ class filter(queryElement):
 class input(queryElement):
     def __init__(self, *variables):
         super().__init__('input:', variables)
+
+    def construct(self, indent=0):
+        if not self.elements:
+            return
+        return '(' + super().construct(indent=indent + 1) + ((indent + 1) * '\t') + ')'
+
+class where(queryElement):
+    def __init__(self, *variables):
+        super().__init__('where:', variables)
 
     def construct(self, indent=0):
         if not self.elements:
